@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON BREACH | AI GENERATED</title>
+    <style>
+        body { margin: 0; background: #0a0a0a; overflow: hidden; font-family: 'Courier New', monospace; touch-action: none; }
+        canvas { display: block; filter: drop-shadow(0 0 5px #bc13fe); }
+        #ui { position: absolute; top: 10px; left: 10px; color: #00f2ff; pointer-events: none; }
+        #msg { position: absolute; bottom: 20px; width: 100%; text-align: center; color: #bc13fe; font-size: 12px; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+    <div id="ui">DEPTH: <span id="depth">1</span></div>
+    <div id="msg">FIND THE CORE // AVOID THE VOID</div>
+    <canvas id="c"></canvas>
+
+<script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const depthEl = document.getElementById('depth');
+    
+    let grid = [], tileSize = 40, cols, rows;
+    let player = { x: 1, y: 1 }, exit = { x: 0, y: 0 };
+    let level = 1;
+
+    function init() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        cols = Math.floor(canvas.width / tileSize);
+        rows = Math.floor(canvas.height / tileSize);
+        generateLevel();
+    }
+
+    function generateLevel() {
+        // Fill with walls (1)
+        grid = Array(cols).fill().map(() => Array(rows).fill(1));
+        
+        // Random Walker Algorithm
+        let x = 1, y = 1;
+        grid[x][y] = 0;
+        for(let i = 0; i < (cols * rows) * 0.4; i++) {
+            let dir = Math.floor(Math.random() * 4);
+            if(dir === 0 && x < cols - 2) x++;
+            else if(dir === 1 && x > 1) x--;
+            else if(dir === 2 && y < rows - 2) y++;
+            else if(dir === 3 && y > 1) y--;
+            grid[x][y] = 0;
+            exit = { x, y }; // Last spot walked is the exit
+        }
+        player = { x: 1, y: 1 };
+        draw();
+    }
+
+    function draw() {
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for(let x = 0; x < cols; x++) {
+            for(let y = 0; y < rows; y++) {
+                if(grid[x][y] === 1) {
+                    ctx.fillStyle = '#1a1a1a'; // Wall
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize-1, tileSize-1);
+                } else {
+                    ctx.strokeStyle = '#222'; // Floor
+                    ctx.strokeRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                }
+            }
+        }
+
+        // Draw Exit (The Core)
+        ctx.fillStyle = '#ff0055';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ff0055';
+        ctx.fillRect(exit.x*tileSize + 10, exit.y*tileSize + 10, tileSize-20, tileSize-20);
+
+        // Draw Player
+        ctx.fillStyle = '#00f2ff';
+        ctx.shadowColor = '#00f2ff';
+        ctx.fillRect(player.x*tileSize + 5, player.y*tileSize + 5, tileSize-10, tileSize-10);
+        ctx.shadowBlur = 0;
+    }
+
+    // Mobile Control Logic
+    window.addEventListener('touchstart', e => {
+        const touch = e.touches[0];
+        const tx = Math.floor(touch.clientX / tileSize);
+        const ty = Math.floor(touch.clientY / tileSize);
+        
+        // Move towards touch if adjacent and not a wall
+        let dx = Math.sign(tx - player.x);
+        let dy = Math.sign(ty - player.y);
+        
+        if(Math.abs(tx - player.x) > Math.abs(ty - player.y)) dy = 0;
+        else dx = 0;
+
+        if(grid[player.x + dx][player.y + dy] === 0) {
+            player.x += dx;
+            player.y += dy;
+        }
+
+        if(player.x === exit.x && player.y === exit.y) {
+            level++;
+            depthEl.innerText = level;
+            generateLevel();
+        }
+        draw();
+    });
+
+    window.addEventListener('resize', init);
+    init();
+</script>
+</body>
+</html>
